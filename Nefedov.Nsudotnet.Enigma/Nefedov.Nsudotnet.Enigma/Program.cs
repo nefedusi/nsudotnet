@@ -8,18 +8,18 @@ namespace Nefedov.Nsudotnet.Enigma
 {
     class Program
     {
-        public enum Algorithm
+        private enum Algorithm
         {
-            undef, aes, des, rc2, rijndael
+            Undef, Aes, Des, Rc2, Rijndael
         }
 
-        static Mode mode = Mode.undef;
-        static Algorithm alg = Algorithm.undef;
-        static String inFilename = null;
-        static String keyFilename = null;
-        static String outFilename = null;
+        private static Mode _mode = Mode.Undef;
+        private static Algorithm _alg = Algorithm.Undef;
+        private static String _inFileName = null;
+        private static String _keyFileName = null;
+        private static String _outFileName = null;
 
-        private static void ParseArguments(string[] args)
+        private static bool ParseArguments(string[] args)
         {
             for (int i = 0; i < args.Length - 3; i++)
             {
@@ -27,93 +27,95 @@ namespace Nefedov.Nsudotnet.Enigma
                 {
                     case "encrypt":
                         {
-                            mode = Mode.encrypt;
+                            _mode = Mode.Encrypt;
                             break;
                         }
                     case "decrypt":
                         {
-                            mode = Mode.decrypt;
+                            _mode = Mode.Decrypt;
                             break;
                         }
                     default:
                         {
                             Console.WriteLine("ERROR!!! - wrong set or order of arguments");
-                            return;
+                            return false;
                         }
                 }
                 i++;
-                inFilename = args[i];    //if I use String class - will args[i] chars copy or there will be a link to them?
+                _inFileName = args[i];    //if I use String class - will args[i] chars copy or there will be a link to them?
                 i++;
 
                 switch (args[i])
                 {
                     case "aes":
                         {
-                            alg = Algorithm.aes;
+                            _alg = Algorithm.Aes;
                             break;
                         }
                     case "des":
                         {
-                            alg = Algorithm.des;
+                            _alg = Algorithm.Des;
                             break;
                         }
                     case "rc2":
                         {
-                            alg = Algorithm.rc2;
+                            _alg = Algorithm.Rc2;
                             break;
                         }
                     case "rijndael":
                         {
-                            alg = Algorithm.rijndael;
+                            _alg = Algorithm.Rijndael;
                             break;
                         }
                     default:
                         {
                             Console.WriteLine("ERROR!!! - wrong set or order of arguments");
-                            return;
+                            System.Environment.Exit(0);
+                            return false;
                         }
                 }
                 i++;
-                if (mode == Mode.decrypt)
+                if (_mode == Mode.Decrypt)
                 {
-                    keyFilename = args[i];
+                    _keyFileName = args[i];
                     i++;
                     if (i == args.Length)
                     {
                         Console.WriteLine("ERROR!!! - too little arguments");
-                        return;
+                        return false;
                     }
                 }
-                outFilename = args[i];
+                _outFileName = args[i];
             }
-            if (mode == Mode.encrypt)
+            if (_mode == Mode.Encrypt)
             {
-                keyFilename = String.Concat(inFilename.Substring(0, inFilename.LastIndexOf('.')) + ".key.txt");
+                _keyFileName = String.Concat(_inFileName.Substring(0, _inFileName.LastIndexOf('.')) + ".key.txt");
             }
+            return true;
         }
 
         private static void SwitchAlgorithm()
         {
-            switch (alg)
+            switch (_alg)
             {
-                case Algorithm.aes:
+                case Algorithm.Aes:
                     {
-                        Coder.Execute<AesManaged>(mode, inFilename, keyFilename, outFilename);
+                        Coder.Execute<AesManaged>(_mode, _inFileName, _keyFileName, _outFileName);
                         break;
                     }
-                case Algorithm.des:
+                case Algorithm.Des:
                     {
-                        Coder.Execute<DESCryptoServiceProvider>(mode, inFilename, keyFilename, outFilename);
+                        Coder.Execute<DESCryptoServiceProvider>(_mode, _inFileName, _keyFileName, _outFileName);
                         break;
                     }
-                case Algorithm.rc2:
+                case Algorithm.Rc2:
                     {
-                        Coder.Execute<RC2CryptoServiceProvider>(mode, inFilename, keyFilename, outFilename);
+                        Coder.Execute<RC2CryptoServiceProvider>(_mode, _inFileName, _keyFileName, _outFileName);
                         break;
                     }
-                case Algorithm.rijndael:
+                case Algorithm.Rijndael:
                     {
-                        Coder.Execute<RijndaelManaged>(mode, inFilename, keyFilename, outFilename);
+                        Coder.Execute<RijndaelManaged>(_mode, _inFileName, _keyFileName, _outFileName);
                         break;
                     }
                 default:
@@ -130,13 +132,17 @@ namespace Nefedov.Nsudotnet.Enigma
             if (args.Length < 4)
             {
                 Console.WriteLine("ERROR!!! - too little arguments");
+                return;
             }
             /*for (int i = 0; i < args.Length; i++)
             {
                 Console.WriteLine("Arg[{0}] = [{1}]", i, args[i]);
             }*/
 
-            ParseArguments(args);
+            if (!ParseArguments(args))
+            {
+                return;
+            }
             //Console.WriteLine("keyfilename={0}", keyFilename);
 
             SwitchAlgorithm();
